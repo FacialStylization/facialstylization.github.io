@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>DreamBooth</title>
+<title>ConstFS</title>
 <link href="./DreamBooth_files/style.css" rel="stylesheet">
 <script type="text/javascript" src="./DreamBooth_files/jquery.mlens-1.0.min.js"></script> 
 <script type="text/javascript" src="./DreamBooth_files/jquery.js"></script>
@@ -9,74 +9,209 @@
 
 <body>
 <div class="content">
-  <h1><strong>DreamBooth: Fine Tuning Text-to-Image Diffusion Models for Subject-Driven Generation</strong></h1>
-  <p id="authors"><span><a href="https://natanielruiz.github.io/"></a></span><a href="https://natanielruiz.github.io/">Nataniel Ruiz</a	> <a href="http://people.csail.mit.edu/yzli/">Yuanzhen Li</a> <a href="https://varunjampani.github.io/">Varun Jampani</a> <a href="https://research.google/people/106214/">Yael Pritch</a> <a href="http://people.csail.mit.edu/mrub/">Michael Rubinstein</a> <a href="https://kfiraberman.github.io/">Kfir Aberman</a><br>
+  <h1><strong>ConstFS:Controlled and Stable Face Stylization with High Identity-Preserved</strong></h1>
+  <p id="authors"><a href="https://facialstylization.github.io/">Anonymous Author</a><br>
     <br>
-  <span style="font-size: 24px">Google Research
+  <span style="font-size: 24px">Anonymous Institute
   </span></p>
   <br>
-  <img src="./DreamBooth_files/teaser_static.jpg" class="teaser-gif" style="width:100%;"><br>
-  <h3 style="text-align:center"><em>It’s like a photo booth, but once the subject is captured, it can be synthesized wherever your dreams take you…</em></h3>
-    <font size="+2">
-          <p style="text-align: center;">
-            <a href="https://arxiv.org/abs/2208.12242" target="_blank">[Paper]</a> &nbsp;&nbsp;&nbsp;&nbsp;
-	    (<font color="#C70039">new!</font>) <a href="https://github.com/google/dreambooth" target="_blank">[Dataset]</a> &nbsp;&nbsp;&nbsp;&nbsp;
-            <a href="DreamBooth_files/bibtex.txt" target="_blank">[BibTeX]</a>
-          </p>
-    </font>
 </div>
 <div class="content">
   <h2 style="text-align:center;">Abstract</h2>
-  <p>Large text-to-image models achieved a remarkable leap in the evolution of AI, enabling high-quality and diverse synthesis of images from a given text prompt. However, these models lack the ability to mimic the appearance of subjects in a given reference set and synthesize novel renditions of them in different contexts. In this work, we present a new approach for "personalization" of text-to-image diffusion models (specializing them to users' needs). Given as input just a few images of a subject, we fine-tune a pretrained text-to-image model (Imagen, although our method is not limited to a specific model) such that it learns to bind a unique identifier with that specific subject. Once the subject is embedded in the output domain of the model, the unique identifier can then be used to synthesize fully-novel photorealistic images of the subject contextualized in different scenes. By leveraging the semantic prior embedded in the model with a new autogenous class-specific prior preservation loss, our technique enables synthesizing the subject in diverse scenes, poses, views, and lighting conditions that do not appear in the reference images. We apply our technique to several previously-unassailable tasks, including subject recontextualization, text-guided view synthesis, appearance modification, and artistic rendering (all while preserving the subject's key features).</p>
+  <p>Facial style transfer often suffers from content loss, style degradation, and challenges balancing style and content consistency. Traditional methods, particularly those based on StyleGAN and Stable Diffusion, frequently encounter issues like facial feature distortion and color leakage. To address these problems, we propose ConstFS, a novel method for facial style transfer. Our approach enhances traditional diffusion models by integrating advanced style extraction, identity preservation, and dynamic control mechanisms. We utilize the ControlNet Selector to choose the appropriate ControlNet based on the style image, ensuring optimal image control. Our experiments demonstrate that ConstFS performs better in maintaining style integrity and content consistency, outperforming existing methods in critical qualitative and quantitative metrics.</p>
 </div>
-<div class="content">
+<!-- <div class="content">
   <h2>Background</h2>
   <p> Given a particular subject such as clock (shown in the real images on the left), it is very challenging to generate it in different contexts with state-of-the-art text-to-image models, while maintaining high fidelity to its key visual features. Even with dozens of iterations over a text prompt that contains a detailed description of the appearance of the clock (<em>"retro style yellow alarm clock with a white clock face and a yellow number three on the right part of the clock face in the jungle"</em>), the Imagen model [Saharia et al., 2022] can't reconstruct its key visual features (third column). Furthermore, even models whose text embedding lies in a shared language-vision space and can create semantic variations of the image, such as DALL-E2 [Ramesh et al., 2022], can neither reconstruct the appearance of the given subject nor modify the context (second column). In contrast, our approach (right) can synthesize the clock with high fidelity and in new contexts (<em>"a [V] clock in the jungle"</em>).</p>
   <br>
   <img class="summary-img" src="./DreamBooth_files/background.png" style="width:100%;"> <br>
+</div> -->
+<div class="content">
+  <h2 style="text-align:center;">Method</h2>
+  <img src="./assets/overview(fn).png" style="width:100%;">
+  <p>This paper proposes an innovative facial style transfer method named <strong>ConstFS</strong> (<strong>Con</strong>trolled and <strong>St</strong>able <strong>F</strong>ace <strong>S</strong>tylization), as illustrated in Fig.~\ref{fig:overview}. Our method aims to achieve high-quality style transfer by precisely controlling the style and content of the generated images, ensuring superior visual effects. The proposed approach contains the following 5 modules:</p>
+  <ul>
+    <li><strong>Style Extraction</strong>: A style extractor captures the texture and structure features of the style image.</li>
+    <li><strong>ID Feature Extraction</strong>: An ID encoder extracts the identity features of the face.</li>
+    <li><strong>Text Feature Extraction</strong>: A combination of Visual Large Language Model (VLM) and Large Language Model (LLM) generates descriptive text features using specialized prompt templates.</li>
+    <li><strong>ControlNet Selection</strong>: An appropriate ControlNet is selected based on the characteristics of the style image.</li>
+    <li><strong>Feature Integration</strong>: All extracted features are injected into a UNet via the Stable Diffusion XL pipeline and IP-Adapter. This multi-level, multi-module collaborative mechanism ensures that our approach can generate highly consistent and high-quality images in style transfer tasks.</li>
+  </ul>
 </div>
 <div class="content">
-  <h2>Approach</h2>
-  <p> Our method takes as input a few images (typically 3-5 images suffice, based on our experiments) of a subject (e.g., a specific dog) and the corresponding class name (e.g. "dog"), and returns a fine-tuned/"personalized'' text-to-image model that encodes a unique identifier that refers to the subject. Then, at inference, we can implant the unique identifier in different sentences to synthesize the subjects in difference contexts.</p>
+  <h2 style="text-align:center;">Comparison Results</h2>
+  <p>Comparison to Previous Methods. Including StyleGAN-Based methods and Stable-Diffusion-Based methods, we utilize the default implementations of these works.</p>
+<img class="summary-img" src="./assets/Comparison.png" style="width:100%;">
+</div>
+<div class="content">
+  <h2 style="text-align:center;">Qualitative Comparison</h2>
+  <h3 style="text-align: center;">Quantitative Comparison in AAHQ datasets</h3>
+  <table style="margin: 0 auto; text-align: center;">
+    <caption style="caption-side: top;">Quantitative Comparison in AAHQ datasets</caption>
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Art-FID↓</th>
+        <th>FID↓</th>
+        <th>LPIPS↓</th>
+        <th>CLIP-Score↑</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Ours</td>
+        <td>8.41</td>
+        <td>2.24</td>
+        <td>0.66</td>
+        <td><strong>85.26</strong></td>
+      </tr>
+      <tr>
+        <td>BlendGAN</td>
+        <td>8.18</td>
+        <td>1.39</td>
+        <td>0.64</td>
+        <td>67.18</td>
+      </tr>
+      <tr>
+        <td>JoJoGAN</td>
+        <td>9.55</td>
+        <td><strong>1.07</strong></td>
+        <td><strong>0.55</strong></td>
+        <td>74.86</td>
+      </tr>
+      <tr>
+        <td>OSASIS</td>
+        <td><strong>8.03</strong></td>
+        <td>2.59</td>
+        <td>0.68</td>
+        <td>64.89</td>
+      </tr>
+      <tr>
+        <td>MMFS</td>
+        <td>9.25</td>
+        <td>4.46</td>
+        <td>0.67</td>
+        <td>69.55</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <h3 style="text-align: center;">Quantitative Comparison in Metfaces datasets</h3>
+  <table style="margin: 0 auto; text-align: center;">
+    <caption style="caption-side: top;">Quantitative Comparison in Metfaces datasets</caption>
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Art-FID↓</th>
+        <th>FID↓</th>
+        <th>LPIPS↓</th>
+        <th>CLIP-Score↑</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Ours</td>
+        <td>14.14</td>
+        <td>2.65</td>
+        <td>0.74</td>
+        <td><strong>87.10</strong></td>
+      </tr>
+      <tr>
+        <td>BlendGAN</td>
+        <td><strong>9.95</strong></td>
+        <td><strong>2.50</strong></td>
+        <td>0.70</td>
+        <td>49.50</td>
+      </tr>
+      <tr>
+        <td>JoJoGAN</td>
+        <td>16.46</td>
+        <td>3.39</td>
+        <td><strong>0.57</strong></td>
+        <td>61.36</td>
+      </tr>
+      <tr>
+        <td>OSASIS</td>
+        <td>13.00</td>
+        <td>4.14</td>
+        <td>0.73</td>
+        <td>44.61</td>
+      </tr>
+      <tr>
+        <td>MMFS</td>
+        <td>16.17</td>
+        <td>14.62</td>
+        <td>0.78</td>
+        <td>46.49</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="content">
+  <h2 style="text-align: center;">Ablation Study</h2>
+  <!-- <p>Our technique can synthesized images with specified viewpoints for a subject cat (left to right: top, bottom, side and back views). Note that the generated poses are different from the input poses, and the background changes in a realistic manner given a pose change. We also highlight the preservation of complex fur patterns on the subject cat's forehead.</p> -->
   <br>
-  <img class="summary-img" src="./DreamBooth_files/high_level.png" style="width:100%;"> <br>
-  <p>Given ~3-5 images of a subject we fine tune a text-to-image diffusion in two steps: (a) fine tuning the low-resolution text-to-image model with the input images paired with a text prompt containing a unique identifier and the name of the class the subject belongs to (e.g., "A photo of a [T] dog”), in parallel, we apply a class-specific prior preservation loss, which leverages the semantic prior that the model has on the class and encourages it to generate diverse instances belong to the subject's class by injecting the class name in the text prompt (e.g., "A photo of a dog”). (b) fine-tuning the super resolution components with pairs of low-resolution and high-resolution images taken from our input images set, which enables us to maintain high-fidelity to small details of the subject.</p>
-  <br>
-  <img class="summary-img" src="./DreamBooth_files/system.png" style="width:100%;"> <br>
+  <h3 style="text-align: center;">Ablation Study Table</h3>
+  <table style="margin: 0 auto; text-align: center;">
+    <caption style="caption-side: top;">Ablation Study Results</caption>
+    <thead>
+      <tr>
+        <th>ControlNet Selector</th>
+        <th>Image Captioner</th>
+        <th>Style Extractor</th>
+        <th>ID Encoder</th>
+        <th>CLIPScore</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>&#10008;</td>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td>86.5076</td>
+      </tr>
+      <tr>
+        <td>&#10004;</td>
+        <td>&#10008;</td>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td>87.0774</td>
+      </tr>
+      <tr>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td>&#10008;</td>
+        <td>&#10004;</td>
+        <td>86.6845</td>
+      </tr>
+      <tr>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td>&#10008;</td>
+        <td>87.0391</td>
+      </tr>
+      <tr>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td>&#10004;</td>
+        <td><strong>89.2645</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 style="text-align: center;">Ablation Study Figures</h3>
+  <img class="summary-img" src="./assets/StyleExtractor.png" style="width:100%;">
+  <img class="summary-img" src="./assets/IDEncoder.png" style="width:100%;">
+  <img class="summary-img" src="./assets/ControlNet.png" style="width:100%;">
+  <img class="summary-img" src="./assets/ImageCaptioner(wo).png" style="width:100%;">
 </div>
 <div class="content">
-  <h2>Results</h2>
-  <p>Results for re-contextualization of a bag and vase subject instances. By finetuning a model using our method we are able to generate different images of the a subject instance in different environments, with high preservation of subject details and realistic interaction between the scene and the subject. We display the conditioning prompts below each image. </p>
-<img class="summary-img" src="./DreamBooth_files/results.png" style="width:100%;">
-</div>
-<div class="content">
-  <h2>Art Rendition</h2>
-  <p>Original artistic renditions of our subject dog in the style of famous painters. We remark that many of the generated poses were not seen in the training set, such as the Van Gogh and Warhol rendition. We also note that some renditions seem to have novel composition and faithfully imitate the style of the painter - even suggesting some sort of creativity (extrapolation given previous knowledge).</p>
-  <br>
-  <img class="summary-img" src="./DreamBooth_files/art.png" style="width:100%;"> <br>
-</div>
-<div class="content">
-  <h2>Text-Guided View Synthesis</h2>
-  <p>Our technique can synthesized images with specified viewpoints for a subject cat (left to right: top, bottom, side and back views). Note that the generated poses are  different from the input poses, and the background changes in a realistic manner given a pose change. We also highlight the preservation of complex fur patterns on the subject cat's forehead.</p>
-  <br>
-  <img class="summary-img" src="./DreamBooth_files/novel_views.png" style="width:100%;"> <br>
-</div>
-<div class="content">
-  <h2>Property Modification</h2>
+  <h2 style="text-align: center;"></h2>
   <p>We show color modifications in the first row (using prompts ``a [color] [V] car''), and crosses between a specific dog and different animals in the second row (using prompts ``a cross of a [V] dog and a [target species]''). We highlight the fact that our method preserves unique visual features that give the subject its identity or essence, while performing the required property modification.</p>
   <br>
   <img class="summary-img" src="./DreamBooth_files/property_modification.png" style="width:100%;"> <br>
-</div>
-<div class="content">
-  <h2>Accessorization</h2>
-  <p>Outfitting a dog with accessories. The identity of the subject is preserved and many different outfits or accessories can be applied to the dog given a prompt of type <em>"a [V] dog wearing a police/chef/witch outfit''</em>. We observe a realistic interaction between the subject dog and the outfits or accessories, as well as a large variety of possible options.</p>
-  <br>
-  <img class="summary-img" src="./DreamBooth_files/accessories.png" style="width:100%;"> <br>
-</div>
-<div class="content">
-  <h2>Societal Impact</h2>
-  <p>This project aims to provide users with an effective tool for synthesizing personal subjects (animals, objects) in different contexts. While general text-to-image models might be biased towards specific attributes when synthesizing images from text, our approach enables the user to get a better reconstruction of their desirable subjects. On contrary, malicious parties might try to use such images to mislead viewers. This is a common issue, existing in other generative models approaches or content manipulation techniques. Future research in generative modeling, and specifically of personalized generative priors, must continue investigating and revalidating these concerns.</p>
-  <br>
 </div>
 <div class="content">
   <h2>BibTex</h2>
